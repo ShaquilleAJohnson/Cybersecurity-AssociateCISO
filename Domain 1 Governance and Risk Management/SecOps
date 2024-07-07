@@ -1,0 +1,148 @@
+Security Monitoring
+
+Objective: Implement continuous monitoring of security events and logs.
+
+Python Script Example: Log Monitoring
+
+import os
+import time
+
+LOG_FILE_PATH = '/var/log/syslog'  # Adjust this path as necessary
+
+def tail_log(file_path):
+    with open(file_path, 'r') as file:
+        st_size = os.stat(file_path).st_size
+        file.seek(st_size)
+
+        while True:
+            line = file.readline()
+            if not line:
+                time.sleep(1)
+                continue
+            yield line
+
+def process_log_line(line):
+    if 'ERROR' in line or 'CRITICAL' in line:
+        print(f"ALERT: {line.strip()}")
+
+def main():
+    for log_line in tail_log(LOG_FILE_PATH):
+        process_log_line(log_line)
+
+if __name__ == '__main__':
+    main()
+
+Incident Response
+
+Objective: Develop frameworks and automation for effective incident response.
+
+Python Script Example: Incident Response Automation
+
+import requests
+import json
+
+SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+
+def notify_slack(message):
+    payload = {
+        "text": message
+    }
+    requests.post(SLACK_WEBHOOK_URL, data=json.dumps(payload))
+
+def simulate_incident_response():
+    # Simulate an incident detection
+    incident_details = {
+        'type': 'DDoS',
+        'severity': 'high',
+        'description': 'Detected Distributed Denial of Service attack on web server'
+    }
+    response_action = 'Blocking offending IPs and scaling resources'
+
+    notify_slack(f"Incident detected: {incident_details['type']}\n"
+                 f"Severity: {incident_details['severity']}\n"
+                 f"Description: {incident_details['description']}\n"
+                 f"Response Action: {response_action}")
+
+if __name__ == '__main__':
+    simulate_incident_response()
+
+Threat Intelligence
+
+Objective: Integrate and utilize threat intelligence feeds to anticipate and mitigate potential threats.
+
+Python Script Example: Threat Intelligence Integration
+
+import requests
+
+THREAT_INTEL_API_URL = 'https://api.threatintelligenceplatform.com/v1'
+API_KEY = 'YOUR_API_KEY'
+
+def get_threat_intel(ip):
+    response = requests.get(f'{THREAT_INTEL_API_URL}/reputation?ip={ip}&apiKey={API_KEY}')
+    return response.json()
+
+def analyze_ip(ip):
+    threat_data = get_threat_intel(ip)
+    if threat_data['reputationScore'] < 50:
+        print(f"Threat detected for IP {ip}: {threat_data}")
+
+if __name__ == '__main__':
+    test_ip = '192.0.2.1'
+    analyze_ip(test_ip)
+
+Vulnerability Management
+
+Objective: Implement best practices for identifying, assessing, and mitigating vulnerabilities.
+
+Python Script Example: Vulnerability Scanning
+
+import nmap
+
+def run_vulnerability_scan(target):
+    scanner = nmap.PortScanner()
+    scanner.scan(target, arguments='-sV --script vuln')
+    for host in scanner.all_hosts():
+        print(f'Host: {host}')
+        for proto in scanner[host].all_protocols():
+            ports = scanner[host][proto].keys()
+            for port in ports:
+                print(f'Port: {port} ({scanner[host][proto][port]["name"]}) - {scanner[host][proto][port]["state"]}')
+
+if __name__ == '__main__':
+    target_ip = '192.0.2.1'
+    run_vulnerability_scan(target_ip)
+
+Automation and Orchestration
+
+Objective: Implement automation to streamline security operations and reduce response times.
+
+Python Script Example: Security Automation with Ansible
+
+---
+- name: Apply security patches
+  hosts: all
+  tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        upgrade: dist
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Ensure ufw is installed
+      apt:
+        name: ufw
+        state: present
+
+    - name: Allow SSH through firewall
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+        policy: deny
+
+You can run this Ansible playbook with the following command:
+
+ansible-playbook -i hosts security_automation.yml
